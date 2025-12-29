@@ -1,6 +1,6 @@
-### 🔍 Object Detection Web App using YOLO & Streamlit
+## 🔍 Object Detection Web App using YOLO & Streamlit
 
-# Live project link : https://object-detection-from-image-project-dl-454pvzj36eqmjhnappvvrnk.streamlit.app/
+### Live project link : https://object-detection-from-image-project-dl-454pvzj36eqmjhnappvvrnk.streamlit.app/
 
 This project is a **real-time object detection web application** built using a custom-trained **YOLO model** and **Streamlit**.
 Users can upload images and instantly get accurate object detection results with bounding boxes, labels, and confidence scores through a **modern and interactive web interface**.
