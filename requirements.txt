@@ -1,9 +1,6 @@
 streamlit
-torch
-torchvision
-Pillow
+ultralytics
 opencv-python
+pillow
 numpy
-tqdm
-pandas
-matplotlib
+torch
