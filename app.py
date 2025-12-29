@@ -1,63 +1,83 @@
 import streamlit as st
-from PIL import Image
-import torch
 import cv2
 import numpy as np
+from PIL import Image
+from ultralytics import YOLO
 
-# Load YOLO model
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+# Page config
+st.set_page_config(
+    page_title="Object Detection App",
+    page_icon="🔍",
+    layout="wide"
+)
 
-# Page configuration
-st.set_page_config(page_title="YOLO Object Detection", page_icon="📦", layout="wide")
+# Load model
+@st.cache_resource
+def load_model():
+    return YOLO("yolo11n.pt")
 
-# Custom CSS for attractive interface
+model = load_model()
+
+# Custom CSS for beauty
 st.markdown("""
-    <style>
-    .stApp {
-        background: linear-gradient(to right, #ffecd2, #fcb69f);
-        color: #333333;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .title {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #d35400;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    .upload-box {
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    .stButton>button {
-        background-color: #e67e22;
-        color: white;
-        font-size: 1rem;
-        border-radius: 8px;
-        padding: 10px 20px;
-    }
-    </style>
+<style>
+.main {
+    background-color: #0e1117;
+}
+.title {
+    text-align: center;
+    font-size: 42px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+.subtitle {
+    text-align: center;
+    color: #BBBBBB;
+    font-size: 18px;
+}
+</style>
 """, unsafe_allow_html=True)
 
 # Title
-st.markdown('<div class="title">📦 YOLO Object Detection App</div>', unsafe_allow_html=True)
-st.markdown('<p style="text-align:center;">Upload an image and detect objects using YOLOv5</p>', unsafe_allow_html=True)
+st.markdown('<div class="title">🔍 Object Detection App</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Powered by YOLO & Streamlit</div>', unsafe_allow_html=True)
+st.markdown("---")
 
-# Image upload
-with st.container():
-    st.markdown('<div class="upload-box">', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
-    st.markdown('</div>', unsafe_allow_html=True)
+# Sidebar
+st.sidebar.header("⚙️ Settings")
+confidence = st.sidebar.slider("Confidence Threshold", 0.1, 1.0, 0.4)
 
-# Detect objects
-if uploaded_file is not None:
+uploaded_file = st.file_uploader(
+    "📤 Upload an Image",
+    type=["jpg", "jpeg", "png"]
+)
+
+if uploaded_file:
+    col1, col2 = st.columns(2)
+
+    # Load image
     image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Image', use_column_width=True)
-    
-    # YOLO inference
-    results = model(np.array(image))
-    result_img = np.squeeze(results.render())
-    
-    st.image(result_img, caption='Detected Objects', use_column_width=True)
+    image_np = np.array(image)
+
+    with col1:
+        st.subheader("📷 Original Image")
+        st.image(image, use_container_width=True)
+
+    # Run detection
+    results = model.predict(image_np, conf=confidence)
+    annotated_frame = results[0].plot()
+
+    with col2:
+        st.subheader("🎯 Detection Result")
+        st.image(annotated_frame, use_container_width=True)
+
+    # Detection summary
+    st.markdown("### 🧾 Detection Summary")
+    for box in results[0].boxes:
+        cls_id = int(box.cls[0])
+        conf = float(box.conf[0])
+        label = model.names[cls_id]
+        st.write(f"**{label}** — Confidence: `{conf:.2f}`")
+
+else:
+    st.info("👆 Upload an image to start detection")
